@@ -1,7 +1,7 @@
-# vibe-commit 👻
+# git-vibes 👻
 
-[![npm version](https://img.shields.io/npm/v/vibe-commit.svg)](https://www.npmjs.com/package/vibe-commit)
-[![npm downloads](https://img.shields.io/npm/dm/vibe-commit.svg)](https://www.npmjs.com/package/vibe-commit)
+[![npm version](https://img.shields.io/npm/v/git-vibes.svg)](https://www.npmjs.com/package/git-vibes)
+[![npm downloads](https://img.shields.io/npm/dm/git-vibes.svg)](https://www.npmjs.com/package/git-vibes)
 
 **Git commits с характером. Никогда больше не пиши `fix` или `wip`.**
 
@@ -13,7 +13,7 @@
 
 ```bash
 git add .
-npx vibe-commit
+npx git-vibes
 ```
 
 > Нужен `claude` CLI (бесплатно если есть Claude Code / Max) или `ANTHROPIC_API_KEY`
@@ -24,44 +24,44 @@ npx vibe-commit
 
 ### 🧠 Умный (дефолт)
 ```bash
-npx vibe-commit
+npx git-vibes
 # → "Добавил валидацию email в форму регистрации"
 ```
 
 ### 😤 Честный
 ```bash
-npx vibe-commit --honest
+npx git-vibes --honest
 # → "Наконец починил баг о котором знал три недели"
 ```
 
 ### 🏢 Корпоратный
 ```bash
-npx vibe-commit --corporate
+npx git-vibes --corporate
 # → "Имплементировал критическую фиксацию дефекта валидации"
 ```
 
 ### 🌸 Поэтический
 ```bash
-npx vibe-commit --poetic
+npx git-vibes --poetic
 # → "И снова форма обрела свой смысл, баг ушёл как сон"
 ```
 
 ### 🌀 Хаос
 ```bash
-npx vibe-commit --chaos
+npx git-vibes --chaos
 # → "Починил реальность в секторе авторизации"
 ```
 
 ### 🔥 Роаст
 ```bash
-npx vibe-commit --roast
+npx git-vibes --roast
 # 🔥 "Кто так пишет условия? Ты в порядке?"
 # 📝 "Исправил логику проверки входных данных"
 ```
 
 ### 🇬🇧 English (Conventional Commits)
 ```bash
-npx vibe-commit --lang en
+npx git-vibes --lang en
 # → "fix(auth): correct email validation logic"
 ```
 
@@ -70,14 +70,14 @@ npx vibe-commit --lang en
 ## Автозапуск при каждом коммите
 
 ```bash
-npx vibe-commit --install-hook
+npx git-vibes --install-hook
 ```
 
-Теперь каждый `git commit` автоматически запустит vibe-commit 🚀
+Теперь каждый `git commit` автоматически запустит git-vibes 🚀
 
 Отключить:
 ```bash
-npx vibe-commit --uninstall-hook
+npx git-vibes --uninstall-hook
 ```
 
 ---
