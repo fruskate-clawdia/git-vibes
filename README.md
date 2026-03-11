@@ -92,10 +92,71 @@ npx git-vibes --uninstall-hook
 
 ---
 
+## Провайдеры
+
+Настрой один раз:
+```bash
+npx git-vibes setup
+```
+
+Или укажи прямо в команде:
+```bash
+npx git-vibes --provider openai
+npx git-vibes --provider gemini
+npx git-vibes --provider ollama   # локально, бесплатно!
+npx git-vibes --provider anthropic
+```
+
+Или через env переменные:
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+export OPENAI_API_KEY=sk-...
+export GEMINI_API_KEY=...
+```
+
+### Поддерживаемые провайдеры
+
+| Провайдер | Команда | Ключ | Бесплатно? |
+|-----------|---------|------|-----------|
+| Claude CLI | `claude-cli` | Не нужен | ✅ (с Claude Max) |
+| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | — |
+| OpenAI | `openai` | `OPENAI_API_KEY` | — |
+| Gemini | `gemini` | `GEMINI_API_KEY` | ✅ (free tier) |
+| Ollama | `ollama` | Не нужен | ✅ всегда |
+
+---
+
+## Кастомный промпт
+
+```bash
+npx git-vibes --prompt "напиши в стиле Маяковского"
+npx git-vibes --prompt "пиши на английском в стиле твита"
+npx git-vibes --prompt "будь максимально кратким, одно слово"
+```
+
+---
+
+## LazyGit интеграция
+
+Добавь в `~/.config/lazygit/config.yml`:
+
+```yaml
+customCommands:
+  - key: 'V'
+    description: 'git-vibes commit'
+    command: 'git-vibes --yes'
+    context: 'files'
+    loadingText: 'Генерирую вайб-коммит...'
+```
+
+Теперь в LazyGit нажимаешь `V` → автоматический вайб-коммит 🚀
+
+---
+
 ## Требования
 
 - Node.js 18+
-- `claude` CLI **или** `ANTHROPIC_API_KEY` в окружении
+- Один из провайдеров (см. таблицу выше)
 
 ---
 

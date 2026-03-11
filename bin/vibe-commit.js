@@ -9,7 +9,7 @@ const { load: loadConfig, runSetup } = require('../lib/config');
 const { record: recordStat, printStats } = require('../lib/stats');
 
 const CHANNEL = 'https://t.me/ghostinthemachine_ai';
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 const GITMOJI = {
   default:    '✨',
@@ -41,6 +41,8 @@ function printHelp() {
   -y, --yes            Авто-подтверждение без вопросов
   -x, --exclude <file> Исключить файл из анализа
   --gitmoji            Добавить gitmoji к сообщению
+  --provider <name>    Провайдер: claude-cli, anthropic, openai, gemini, ollama
+  -p, --prompt <text>  Кастомный промпт вместо стандартного режима
 
 Команды:
   setup                Интерактивная настройка
@@ -96,6 +98,14 @@ async function main() {
   const excludeIdx = args.findIndex(a => a === '--exclude' || a === '-x');
   const excludeFiles = excludeIdx !== -1 ? args.slice(excludeIdx + 1).filter(a => !a.startsWith('-')) : [];
 
+  // Custom prompt
+  const promptIdx = args.findIndex(a => a === '--prompt' || a === '-p');
+  const customPrompt = promptIdx !== -1 ? args[promptIdx + 1] : null;
+
+  // Provider override
+  const providerIdx2 = args.findIndex(a => a === '--provider');
+  const providerOverride = providerIdx2 !== -1 ? args[providerIdx2 + 1] : null;
+
   const doAll       = args.includes('--all') || args.includes('-a');
   const doClipboard = args.includes('--clipboard') || args.includes('-c');
   const doYes       = args.includes('--yes') || args.includes('-y') || config.autoConfirm;
@@ -142,9 +152,19 @@ async function main() {
 
   console.log(`\n${mode.emoji} git-vibes [${mode.label}]${generateN > 1 ? ` × ${generateN}` : ''} — генерирую...\n`);
 
+  // Build effective config (with provider override)
+  const effectiveConfig = { ...config };
+  if (providerOverride) effectiveConfig.provider = providerOverride;
+
+  // Custom prompt overrides mode
+  const systemPrompt = customPrompt
+    ? `Ты помощник который пишет git commit сообщения. ${customPrompt}. Одна строка, максимум 72 символа. Без кавычек.`
+    : mode.system;
+  const userPrompt = mode.user(trimmedDiff, files);
+
   // Generate N variants
   const promises = Array.from({ length: generateN }, () =>
-    generate(mode.system, mode.user(trimmedDiff, files))
+    generate(systemPrompt, userPrompt, effectiveConfig)
   );
   let results = await Promise.all(promises);
   results = results.filter(Boolean);

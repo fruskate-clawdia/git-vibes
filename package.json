@@ -1,10 +1,11 @@
 {
   "name": "git-vibes",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Git commits с характером — честный, корпоратный, поэтический, хаотичный 👻",
   "main": "bin/vibe-commit.js",
   "bin": {
-    "git-vibes": "./bin/vibe-commit.js"
+    "git-vibes": "./bin/vibe-commit.js",
+    "gv": "./bin/vibe-commit.js"
   },
   "keywords": [
     "git",
