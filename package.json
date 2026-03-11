@@ -1,0 +1,29 @@
+{
+  "name": "vibe-commit",
+  "version": "1.0.0",
+  "description": "Git commits с характером — честный, корпоратный, поэтический, хаотичный 👻",
+  "main": "bin/vibe-commit.js",
+  "bin": {
+    "vibe-commit": "./bin/vibe-commit.js"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "claude",
+    "russian",
+    "vibe",
+    "cli",
+    "developer-tools"
+  ],
+  "author": "Clawdia & Fruskate <https://t.me/fruskate>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fruskate-clawdia/vibe-commit.git"
+  },
+  "homepage": "https://t.me/ghostinthemachine_ai",
+  "engines": {
+    "node": ">=18"
+  }
+}
