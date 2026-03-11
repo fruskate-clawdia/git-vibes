@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 const readline = require('readline');
-const { getStagedDiff, getStagedFiles, isGitRepo, getGitDir, stageAll, commit, copyToClipboard } = require('../lib/git');
-const { MODES } = require('../lib/prompts');
+const { getStagedDiff, getStagedFiles, isGitRepo, getGitDir, stageAll, commit, copyToClipboard, getCurrentBranch, getDefaultBranch, getDiffFromBase, getChangedFilesFromBase } = require('../lib/git');
+const { MODES, BODY_MODES, PR_MODES } = require('../lib/prompts');
 const { generate } = require('../lib/ai');
 const { installHook, uninstallHook } = require('../lib/hook');
 const { load: loadConfig, runSetup } = require('../lib/config');
 const { record: recordStat, printStats } = require('../lib/stats');
 
 const CHANNEL = 'https://t.me/ghostinthemachine_ai';
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 const GITMOJI = {
   default:    '✨',
@@ -47,6 +47,8 @@ function printHelp() {
 Команды:
   setup                Интерактивная настройка
   stats                Статистика твоих коммитов
+  body                 Генерировать заголовок + тело коммита
+  pr                   Генерировать описание Pull Request
   --install-hook       Автозапуск при каждом git commit
   --uninstall-hook     Удалить автозапуск
 
@@ -73,6 +75,102 @@ function pickFromList(items) {
   });
 }
 
+// ─── Body generator ──────────────────────────────────────────────────────────
+async function generateBody(args, config) {
+  if (!isGitRepo()) { console.error('❌ Не в git репозитории'); process.exit(1); }
+
+  const doClipboard = args.includes('-c') || args.includes('--clipboard');
+  const lang = (args.includes('--lang') && args[args.indexOf('--lang') + 1] === 'en') ? 'en' : (config.language || 'ru');
+  const modeName = args.includes('--honest') ? 'honest' : 'default';
+
+  const diff = getStagedDiff();
+  const files = getStagedFiles();
+
+  if (!diff) { console.error('❌ Нет staged изменений'); process.exit(1); }
+
+  const bodyMode = BODY_MODES[modeName] || BODY_MODES.default;
+  const trimmedDiff = diff.length > 4000 ? diff.slice(0, 4000) + '\n...' : diff;
+
+  console.log('\n📝 git-vibes body — генерирую полное сообщение...\n');
+
+  const result = await generate(bodyMode.system, bodyMode.user(trimmedDiff, files), config);
+  if (!result) { console.error('❌ Не удалось сгенерировать'); process.exit(1); }
+
+  // Parse
+  const titleMatch = result.match(/ЗАГОЛОВОК:\s*(.+)/);
+  const bodyMatch  = result.match(/ТЕЛО:\s*([\s\S]+)/);
+  const title = titleMatch?.[1]?.trim() || result.split('\n')[0];
+  const body  = bodyMatch?.[1]?.trim()  || result.split('\n').slice(1).join('\n').trim();
+
+  console.log(`📌 Заголовок: ${title}`);
+  console.log(`\n📄 Тело:\n${body}\n`);
+
+  if (doClipboard) {
+    copyToClipboard(`${title}\n\n${body}`);
+    console.log('✅ Скопировано в буфер!\n');
+    return;
+  }
+
+  const answer = await ask('Закоммитить? [Y/n/c(clipboard)] ');
+  if (answer.toLowerCase() === 'n') return;
+  if (answer.toLowerCase() === 'c') { copyToClipboard(`${title}\n\n${body}`); console.log('✅ Скопировано!'); return; }
+
+  const { execSync } = require('child_process');
+  const escaped = `${title}\n\n${body}`.replace(/"/g, '\\"');
+  execSync(`git commit -m "${escaped}"`, { stdio: 'inherit' });
+  recordStat('body', lang);
+  console.log(`\n✅ Закоммичено!\n`);
+}
+
+// ─── PR description generator ────────────────────────────────────────────────
+async function generatePR(args, config) {
+  if (!isGitRepo()) { console.error('❌ Не в git репозитории'); process.exit(1); }
+
+  const doClipboard = args.includes('-c') || args.includes('--clipboard');
+  const lang = (args.includes('--lang') && args[args.indexOf('--lang') + 1] === 'en') ? 'en' : (config.language || 'ru');
+
+  // Base branch
+  const baseIdx = args.indexOf('--base');
+  const base = baseIdx !== -1 ? args[baseIdx + 1] : getDefaultBranch();
+  const branch = getCurrentBranch();
+
+  console.log(`\n🎨 git-vibes pr — генерирую описание PR...\n`);
+  console.log(`   Ветка: ${branch} → ${base}\n`);
+
+  const diff  = getDiffFromBase(base);
+  const files = getChangedFilesFromBase(base);
+
+  if (!diff) {
+    console.error(`❌ Нет изменений относительно ветки "${base}"`);
+    console.error(`   Попробуй: git-vibes pr --base main`);
+    process.exit(1);
+  }
+
+  const prMode = lang === 'en' ? PR_MODES.english : PR_MODES.default;
+  const trimmedDiff = diff.length > 5000 ? diff.slice(0, 5000) + '\n...' : diff;
+
+  const result = await generate(prMode.system, prMode.user(trimmedDiff, files, branch), config);
+  if (!result) { console.error('❌ Не удалось сгенерировать'); process.exit(1); }
+
+  console.log('─'.repeat(60));
+  console.log(result);
+  console.log('─'.repeat(60) + '\n');
+
+  if (doClipboard) {
+    copyToClipboard(result);
+    console.log('✅ Скопировано в буфер! Вставляй в GitHub PR.\n');
+    return;
+  }
+
+  const answer = await ask('Скопировать в буфер? [Y/n] ');
+  if (answer.toLowerCase() !== 'n') {
+    copyToClipboard(result);
+    console.log('✅ Скопировано! Вставляй в GitHub PR.\n');
+  }
+
+  console.log(`👻 git-vibes — ${CHANNEL}`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
 
@@ -83,6 +181,8 @@ async function main() {
   if (args.includes('--uninstall-hook')) { uninstallHook(); return; }
   if (args[0] === 'setup') { await runSetup(); return; }
   if (args[0] === 'stats') { printStats(); return; }
+  if (args[0] === 'body')  { await generateBody(args.slice(1), config); return; }
+  if (args[0] === 'pr')    { await generatePR(args.slice(1), config); return; }
 
   // Hook mode
   const hookIdx = args.indexOf('--hook');

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0] — 2026-03-11
+
+### Добавлено
+- 📝 `git-vibes body` — генерация полного commit (заголовок + тело What/Why/How)
+- 🎨 `git-vibes pr` — генерация описания Pull Request (Markdown, копируется в буфер)
+  - `git-vibes pr --base main` — указать базовую ветку
+  - `git-vibes pr --lang en` — на английском
+  - `git-vibes pr -c` — сразу в буфер
+
+---
+
+
 ## [1.2.0] — 2026-03-11
 
 ### Добавлено
